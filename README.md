@@ -9,9 +9,19 @@ ADOPT requires PyTorch 2.4.0 or later.
 
 You can use ADOPT just like any other PyTorch optimizers by copying `adopt.py` to your project.
 
+When you replace the `Adam` optimizer to our `ADOPT`, you should just replace the optimizer as follows:
+
 ```python3
 from adopt import ADOPT
+# optimizer = Adam(model.parameters(), lr=1e-3)
 optimizer = ADOPT(model.parameters(), lr=1e-3)
+```
+
+When you are using `AdamW` as a default optimizer, you should set `decouled=True` for our `ADOPT`:
+
+```python3
+# optimizer = AdamW(model.parameters(), lr=1e-3)
+optimizer = ADOPT(model.parameters(), lr=1e-3, decoupled=True)
 ```
 
 ## Citation
