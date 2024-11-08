@@ -17,7 +17,7 @@ from adopt import ADOPT
 optimizer = ADOPT(model.parameters(), lr=1e-3)
 ```
 
-When you are using `AdamW` as a default optimizer, you should set `decouled=True` for our `ADOPT`:
+When you are using `AdamW` as a default optimizer, you should set `decoupled=True` for our `ADOPT`:
 
 ```python3
 # optimizer = AdamW(model.parameters(), lr=1e-3)
