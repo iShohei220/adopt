@@ -34,7 +34,7 @@ class ADOPT(Optimizer):
         self,
         params: ParamsT,
         lr: Union[float, Tensor] = 1e-3,
-        betas: Tuple[float, float] = (0.9, 0.9999),
+        betas: Tuple[float, float] = (0.9, 0.9999, 0.9),
         eps: float = 1e-6,
         weight_decay: float = 0.0,
         decoupled: bool = False,
@@ -60,6 +60,8 @@ class ADOPT(Optimizer):
             raise ValueError(f"Invalid beta parameter at index 0: {betas[0]}")
         if not 0.0 <= betas[1] < 1.0:
             raise ValueError(f"Invalid beta parameter at index 1: {betas[1]}")
+        if not 0.0 <= betas[2] < 1.0:
+            raise ValueError(f"Invalid beta parameter at index 2: {betas[2]}")
         if not 0.0 <= weight_decay:
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
 
@@ -201,7 +203,7 @@ class ADOPT(Optimizer):
             exp_avgs: List[Tensor] = []
             exp_avg_sqs: List[Tensor] = []
             state_steps: List[Tensor] = []
-            beta1, beta2 = group["betas"]
+            beta1, beta2, beta3 = group["betas"]
 
             has_complex = self._init_group(
                 group,
@@ -221,6 +223,7 @@ class ADOPT(Optimizer):
                 has_complex=has_complex,
                 beta1=beta1,
                 beta2=beta2,
+                beta3=beta3,
                 lr=group["lr"],
                 weight_decay=group["weight_decay"],
                 decoupled=group["decoupled"],
@@ -249,6 +252,7 @@ def _single_tensor_adopt(
     has_complex: bool,
     beta1: float,
     beta2: float,
+    beta3: float,
     lr: Union[float, Tensor],
     weight_decay: float,
     decoupled: bool,
@@ -301,10 +305,12 @@ def _single_tensor_adopt(
             exp_avg_sq.addcmul_(grad, grad.conj())
             continue
 
-        denom = torch.clamp(exp_avg_sq.sqrt(), eps)
+        eps_t = max(eps, beta3**(step-2))
+        denom = torch.clamp(exp_avg_sq.sqrt(), eps_t)
         if step == 2:
             exp_avg.addcdiv_(grad, denom)
         else:
+            denom = torch.clamp(exp_avg_sq.sqrt(), eps_t)
             exp_avg.mul_(beta1).addcdiv_(grad, denom, value=1 - beta1)
 
         param.add_(exp_avg, alpha=-lr)
@@ -323,6 +329,7 @@ def _multi_tensor_adopt(
     has_complex: bool,
     beta1: float,
     beta2: float,
+    beta3: float,
     lr: Union[float, Tensor],
     weight_decay: float,
     decoupled: bool,
@@ -406,12 +413,16 @@ def _multi_tensor_adopt(
             torch._foreach_addcmul_(device_exp_avg_sqs, device_grads, device_grads)
             continue
 
+        eps_t = max(eps, beta3**(device_state_steps[0]-2))
         exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
-        exp_avg_sq_sqrt = torch._foreach_maximum(exp_avg_sq_sqrt, eps)
+        exp_avg_sq_sqrt = torch._foreach_maximum(exp_avg_sq_sqrt, eps_t)
 
         if device_state_steps[0] == 2:
             torch._foreach_addcdiv_(device_exp_avgs, device_grads, exp_avg_sq_sqrt)
         else:
+            exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
+            exp_avg_sq_sqrt = torch._foreach_maximum(exp_avg_sq_sqrt, eps_t)
+
             torch._foreach_mul_(device_exp_avgs, beta1)
             torch._foreach_addcdiv_(
                 device_exp_avgs, device_grads, exp_avg_sq_sqrt, value=1 - beta1
@@ -443,6 +454,7 @@ def adopt(
     *,
     beta1: float,
     beta2: float,
+    beta3: float,
     lr: Union[float, Tensor],
     weight_decay: float,
     decoupled: bool,
@@ -498,6 +510,7 @@ def adopt(
         has_complex=has_complex,
         beta1=beta1,
         beta2=beta2,
+        beta3=beta3,
         lr=lr,
         weight_decay=weight_decay,
         decoupled=decoupled,
