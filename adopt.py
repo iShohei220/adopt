@@ -38,7 +38,7 @@ class ADOPT(Optimizer):
         eps: float = 1e-6,
         clip_lambda: Optional[Callable[[int], float]] = lambda step: step**0.25,
         weight_decay: float = 0.0,
-        decoupled: bool = False,
+        decouple: bool = False,
         *,
         foreach: Optional[bool] = None,
         maximize: bool = False,
@@ -64,13 +64,14 @@ class ADOPT(Optimizer):
         if not 0.0 <= weight_decay:
             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
 
+        self.clip_lambda = clip_lambda
+
         defaults = dict(
             lr=lr,
             betas=betas,
             eps=eps,
-            clip_lambda=clip_lambda,
             weight_decay=weight_decay,
-            decoupled=decoupled,
+            decouple=decouple,
             maximize=maximize,
             foreach=foreach,
             capturable=capturable,
@@ -224,9 +225,9 @@ class ADOPT(Optimizer):
                 beta1=beta1,
                 beta2=beta2,
                 lr=group["lr"],
-                clip_lambda=group["clip_lambda"],
+                clip_lambda=self.clip_lambda,
                 weight_decay=group["weight_decay"],
-                decoupled=group["decoupled"],
+                decouple=group["decouple"],
                 eps=group["eps"],
                 maximize=group["maximize"],
                 foreach=group["foreach"],
@@ -255,7 +256,7 @@ def _single_tensor_adopt(
     lr: Union[float, Tensor],
     clip_lambda: Optional[Callable[[int], float]],
     weight_decay: float,
-    decoupled: bool,
+    decouple: bool,
     eps: float,
     maximize: bool,
     capturable: bool,
@@ -285,7 +286,7 @@ def _single_tensor_adopt(
 
         step = step_t if capturable or differentiable else _get_value(step_t)
 
-        if weight_decay != 0 and not decoupled:
+        if weight_decay != 0 and not decouple:
             grad = grad.add(param, alpha=weight_decay)
 
         if torch.is_complex(param):
@@ -302,7 +303,7 @@ def _single_tensor_adopt(
             step_t += 1
             continue
 
-        if weight_decay != 0 and decoupled:
+        if weight_decay != 0 and decouple:
             param.add_(param, alpha=-lr*weight_decay)
 
         denom = torch.clamp(exp_avg_sq.sqrt(), eps)
@@ -335,7 +336,7 @@ def _multi_tensor_adopt(
     lr: Union[float, Tensor],
     clip_lambda: Optional[Callable[[int], float]],
     weight_decay: float,
-    decoupled: bool,
+    decouple: bool,
     eps: float,
     maximize: bool,
     capturable: bool,
@@ -389,17 +390,14 @@ def _multi_tensor_adopt(
         if maximize:
             device_grads = torch._foreach_neg(device_grads)  # type: ignore[assignment]
 
-        if weight_decay != 0:
-            if decoupled:
-                torch._foreach_add_(device_params, device_params, alpha=-lr*weight_decay)
+        if weight_decay != 0 and not decouple:
+            # Re-use the intermediate memory (device_grads) already allocated for maximize
+            if maximize:
+                torch._foreach_add_(device_grads, device_params, alpha=weight_decay)
             else:
-                # Re-use the intermediate memory (device_grads) already allocated for maximize
-                if maximize:
-                    torch._foreach_add_(device_grads, device_params, alpha=weight_decay)
-                else:
-                    device_grads = torch._foreach_add(  # type: ignore[assignment]
-                        device_grads, device_params, alpha=weight_decay
-                    )
+                device_grads = torch._foreach_add(  # type: ignore[assignment]
+                    device_grads, device_params, alpha=weight_decay
+                )
 
         if device_state_steps[0] == 0:
             torch._foreach_addcmul_(device_exp_avg_sqs, device_grads, device_grads)
@@ -416,6 +414,9 @@ def _multi_tensor_adopt(
                 torch._foreach_add_(device_state_steps, 1)
 
             continue
+
+        if weight_decay != 0 and decouple:
+            torch._foreach_add_(device_params, device_params, alpha=-lr*weight_decay)
 
         exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
         torch._foreach_maximum_(exp_avg_sq_sqrt, eps)
@@ -468,7 +469,7 @@ def adopt(
     lr: Union[float, Tensor],
     clip_lambda: Optional[Callable[[int], float]],
     weight_decay: float,
-    decoupled: bool,
+    decouple: bool,
     eps: float,
     maximize: bool,
 ):
@@ -524,7 +525,7 @@ def adopt(
         lr=lr,
         clip_lambda=clip_lambda,
         weight_decay=weight_decay,
-        decoupled=decoupled,
+        decouple=decouple,
         eps=eps,
         maximize=maximize,
         capturable=capturable,
