@@ -11,6 +11,7 @@ To avoid such near-zero division, we decide to add a clipping operation in the m
 Even when the clipping is applied, the convergence guarantee in theory is maintained by properly scheduling the clipping value (see the updated arXiv paper).
 In our implementation, the clipping value is controlled by the argument `clipping_lambda`, which is a callable function that determines the scheduling of the clipping value depending on the number of gradient steps.
 By default, the clipping value is set to `step**0.25`, which aligns with the theory to ensure the convergence.
+We observe that the clipped ADOPT works much more stably than the original one, so we recommend to use it over the unclipped version.
 If you want to reproduce the behaivior of the original version, you should set `clipping_lambda = None`.
 
 ## Requirements
