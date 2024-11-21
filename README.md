@@ -3,7 +3,7 @@ Official Implementation of "[ADOPT: Modified Adam Can Converge with Any $β_2$ w
 
 ## Requirements
 
-ADOPT requires PyTorch 2.4.0 or later.
+ADOPT requires PyTorch 2.5.0 or later.
 
 ## Usage
 
