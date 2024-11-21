@@ -1,5 +1,5 @@
 # ADOPT: Modified Adam Can Converge with Any $β_2$ with the Optimal Rate
-Official Implementation of "[ADOPT: Modified Adam Can Converge with Any $β_2$ with the Optimal Rate](https://arxiv.org/abs/2411.02853)", which is presented at NeurIPS 2024.
+Official Implementation of "[ADOPT: Modified Adam Can Converge with Any β<sub>2</sub> with the Optimal Rate](https://arxiv.org/abs/2411.02853)", which is presented at NeurIPS 2024.
 
 ## Requirements
 
