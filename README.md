@@ -1,9 +1,21 @@
 # ADOPT: Modified Adam Can Converge with Any $β_2$ with the Optimal Rate
 Official Implementation of "[ADOPT: Modified Adam Can Converge with Any β<sub>2</sub> with the Optimal Rate](https://arxiv.org/abs/2411.02853)", which is presented at NeurIPS 2024.
 
+## Update on Nov 22, 2024
+
+Based on feedbacks from many practitioners, we have updated the implementation and the paper to improve the stability of our ADOPT algorithm.
+In the original version, ADOPT sometimes gets unstable especially in the early stage of training.
+This seems to be because the near-zero division by the second memont estimate occurs when some elements of the parameter gradient is near zero at initialization.
+For example, when the some parameters are initialized with zero, which is often-used technique in deep learing, near-zero gradient is observed.
+To avoid such near-zero division, we decide to add a clipping operation in the momentum update.
+Even when the clipping is applied, the convergence guarantee in theory is maintained by properly scheduling the clipping value (see the updated arXiv paper).
+In our implementation, the clipping value is controlled by the argument `clipping_lambda`, which is a callable function that determines the scheduling of the clipping value depending on the number of gradient steps.
+By default, the clipping value is set to `step**0.25`, which aligns with the theory to ensure the convergence.
+If you want to reproduce the behaivior of the original version, you should set `clipping_lambda = None`.
+
 ## Requirements
 
-ADOPT requires PyTorch 2.4.0 or later.
+ADOPT requires PyTorch 2.5.0 or later.
 
 ## Usage
 
