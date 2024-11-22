@@ -6,8 +6,8 @@ Official Implementation of "[ADOPT: Modified Adam Can Converge with Any β<sub>2
 Based on feedbacks from some practitioners, we have updated the implementation to improve the stability of our ADOPT algorithm.
 In the original version, ADOPT sometimes gets unstable especially in the early stage of training.
 This seems to be because the near-zero division by the second memont estimate occurs when some elements of the parameter gradient are near zero at initialization.
-For example, when some parameters (e.g., the last layer of a neural net) are initialized with zero, which is often-used technique in deep learing, near-zero gradient is observed at the first parameter update.
-To avoid such near-zero division, we have decided to add a clipping operation in the momentum update.
+For example, when some parameters (e.g., the last layer of a neural net) are initialized with zero, which is often-used technique in deep learing, a near-zero gradient is observed at the first parameter update.
+To avoid such near-zero divisions, we have decided to add a clipping operation in the momentum update.
 
 ![clipped_adopt](https://github.com/user-attachments/assets/244cb934-8c73-4f89-b9c4-7b94f292af5f)
 
