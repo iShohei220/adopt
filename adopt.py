@@ -447,6 +447,30 @@ def _multi_tensor_adopt(
             torch._foreach_add_(device_state_steps, 1)
 
 
+def _fused_adopt(
+    params: List[Tensor],
+    grads: List[Tensor],
+    exp_avgs: List[Tensor],
+    exp_avg_sqs: List[Tensor],
+    state_steps: List[Tensor],
+    grad_scale: Optional[Tensor],
+    found_inf: Optional[Tensor],
+    *,
+    has_complex: bool,  # Needed for consistency.
+    beta1: float,
+    beta2: float,
+    lr: Union[float, Tensor],
+    clip_lambda: Optional[Callable[[int], float]],
+    weight_decay: float,
+    decouple: bool,
+    eps: float,
+    maximize: bool,
+    capturable: bool,  # Needed for consistency.
+    differentiable: bool,
+) -> None:
+    raise NotImplementedError
+
+
 @_disable_dynamo_if_unsupported(single_tensor_fn=_single_tensor_adopt)
 def adopt(
     params: List[Tensor],
