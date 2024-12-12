@@ -21,9 +21,15 @@ If you want to reproduce the behaivior of the original version, you should set `
 
 ADOPT requires PyTorch 2.5.0 or later.
 
+## Installation
+
+```bash
+pip install torch-adopt
+```
+
 ## Usage
 
-You can use ADOPT just like any other PyTorch optimizers by copying `adopt.py` to your project.
+You can use ADOPT just like any other PyTorch optimizers by importing the `ADOPT` class.
 
 When you replace the `Adam` optimizer to our `ADOPT`, you should just replace the optimizer as follows:
 

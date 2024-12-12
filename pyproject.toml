@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "torch-adopt"
+version = "0.1.0"
+authors = [
+    { name = "Shohei Taniguchi", email = "ishohei220@gmail.com" }
+]
+description = "ADOPT: Modified Adam Can Converge with Any β2 with the Optimal Rate"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Science/Research",
+]
+dependencies = [
+    "torch>=2.5.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/iShohei220/adopt"
+"Bug Tracker" = "https://github.com/iShohei220/adopt/issues"
+"Documentation" = "https://github.com/iShohei220/adopt"
+"Research Paper" = "https://arxiv.org/abs/2411.02853"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/adopt"]

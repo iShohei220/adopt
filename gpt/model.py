@@ -16,7 +16,6 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-sys.path.append("..")
 from adopt import ADOPT
 
 

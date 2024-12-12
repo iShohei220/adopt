@@ -16,7 +16,6 @@ from torch.utils.data.dataloader import default_collate
 from torchvision.transforms.functional import InterpolationMode
 from transforms import get_mixup_cutmix
 
-sys.path.append("..")
 from adopt import ADOPT
 
 
